@@ -1,0 +1,1 @@
+The dataset includes survey responses detailing personal preferences (like pet choices and favorite numbers), demographic information (such as birth dates, countries, and education levels), and interests in global health topics. This structured data enables analysis of how personal and demographic factors relate to global health interests.

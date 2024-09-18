@@ -1,0 +1,184 @@
+---
+title: "class 1 survey analysis"
+author: "Delali"
+date: "2024-09-14"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+library(tidyverse)
+library(table1)
+library(haven)
+library(magrittr)
+library(GGally)
+library(ggfortify)
+library(dplyr)
+library(ggplot2)
+library(gmodels)
+library(grid)
+library(png)
+library(tidymodels)
+library(MASS)
+```
+
+Question 1
+1. Import class one survey data from our Github site (https://github.com/kijohnson/ADA-2024) (The dataset is called ‘Class 1 Survey Fall 2024_di.csv’), calling the R dataframe that you create C1survey.
+```{r}
+read.csv("C:\\Users\\delali\\OneDrive - Washington University in St. Louis\\Desktop\\money salary\\Skills lab\\Git\\Class 1 Survey Fall 2024_di.csv")
+```
+Now loading data
+```{r}
+data <- read.csv("Class 1 Survey Fall 2024_di.csv")
+```
+
+Question 2
+Determine: a. the number of observations (i.e. the number of people who filled out the survey) and b. the number of variables in the dataframe.
+a.
+```{r}
+nrow(data)
+```
+There are 29 observations and 27 variables
+b.
+```{r}
+ncol(data)
+```
+There are  27 variables
+
+
+Questions 3 a. Rename the column variables to something shorter and that is descriptive of what the variable is about (for example like_dogs for the ‘Do you like dogs?’ question variable) and b. Display that they are renamed.
+```{r}
+names(data)[1:27]<-c("id", "like_cats", "like_dogs", "have_desert", "slogan", "fav_day", "larkORowl", "fav_food", "fav_drink", "fav_season", "fav_month", "hobby", "program", "specialization", "stat_software", "R_exp", "coding_comfort", "coding_length", "top_three","public_health_interest", "fav_num", "bday", "bmonth", "country", "state", "city", "highest_educ_level")
+
+#displaying the renamed variables
+colnames(data)
+```
+
+Question 4
+ Write code to determine and display the number of factor, integer, numerical, and character variables there are in the C1survey dataset.
+```{r}
+# Get the class of each variable (column) in the dataframe
+variable_classes <- sapply(data, class)
+
+# Count the number of factor, integer, numeric, and character variables
+num_factors <- sum(variable_classes == "factor")
+num_integers <- sum(variable_classes == "integer")
+num_numerics <- sum(variable_classes == "numeric")
+num_characters <- sum(variable_classes == "character")
+
+# Display the results
+cat("Number of factor variables: ", num_factors, "\n")
+cat("Number of integer variables: ", num_integers, "\n")
+cat("Number of numeric variables: ", num_numerics, "\n")
+cat("Number of character variables: ", num_characters, "\n")
+
+```
+
+question 5
+. a. Using code, check the bday and bmonth variables for any unusual or missing values. If you find any, b. describe what you will do with the unusual values in a comment before or immediately following the code that does it, and c. after you have cleaned up any unusual values, find the median bday and month. *Note: please make sure that your bday and month variables are numeric before doing statistics
+```{r}
+# a. look at values for bday and bmonth
+data$bday
+data$bmonth
+
+# b. recode  bday with non numeric values
+
+# bday recoding method 1
+class(data$bday) # check that it is coded as character class
+data$bday<-ifelse(data$bday == "May 21-report 21", "21", data$bday)
+data$bday<-ifelse(data$bday == "March 31st", "31", data$bday)
+data$bday # check values 
+
+# convert to numeric for statistics
+data$bday<-as.numeric(data$bday)
+table(data$bday, useNA = "always") # check values 
+
+# bmonth recoding
+class(data$bmonth)
+
+data$bmonth[data$bmonth=="May 21-report 5"]<-"5"
+data$bmonth[data$bmonth=="February"]<-"2"
+data$bmonth[data$bmonth=="September"]<-"9"
+data$bmonth[data$bmonth=="July"]<-"7"
+data$bmonth[data$bmonth=="March"]<-"3"
+data$bmonth # check values 
+
+# convert to numeric for statistics
+data$bmonth<-as.numeric(data$bmonth)
+data$bmonth # check values 
+
+# c. calculate medians for bday and bmonth 
+median(data$bday, na.rm=TRUE) # 14 (biased because of 0, which is not a value) How could we better design a survey to ensure this doesn't happen?
+median(data$bmonth, na.rm=TRUE) # 7
+```
+
+question 6
+ a. Create a new variable called bseason that gives the season according to Northern Meteorological season in which respondents were born (winter = 12/1 to 2/29, spring = 3/1 to 5/31, summer = 6/1 to 8/31, fall = 9/1 to 11/30). b. Using the table function, print a table of Seasons in the columns and bmonths in the rows that allows you to check that the coding is correct c. Sum the columns using the addmargins function to answer the question of how many classmates were born in each season? Include your answer in the code.
+```{r}
+# a.
+# using dplyr
+data <- data %>%
+  mutate(bseason=case_when(bmonth %in% c(12,1,2) ~"Winter",
+                           bmonth %in% c(3,4,5) ~"Spring",
+                           bmonth %in% c(6,7,8) ~"Summer",
+                           bmonth %in% c(9,10,11) ~"Fall"))
+table(data$bmonth, data$bseason) # check variable
+
+data$bseason_f<-factor(data$bseason, levels=c("Winter", "Spring", "Summer", "Fall"))
+
+
+# b. 
+table(data$bmonth, data$bseason)
+table(data$bmonth, data$bseason_f)
+
+# c.
+tab<-addmargins(table(data$bmonth, data$bseason, useNA = "always"), 1)
+tab
+tab<-addmargins(table(data$bmonth, data$bseason_f, useNA = "always"), 1)
+tab
+
+# Births by season: Fall = 4 Winter = 9 Spring = 8 Summer = 8
+```
+
+question 7
+Pick your favorite variable or variables to analyze, come up with a question you want to answer with that variable or variables, generate the code, and provide an answer to your question. Describe what you did using comments (i.e. #’s).
+```{r}
+# 1. Check the 'fav_month' variable for any unusual or missing values
+# Assuming fav_month is numeric and corresponds to months (1-12)
+summary(data$fav_month)
+unique(data$fav_month)
+
+# 2. Check the 'hobby' variable for unique values (assuming it's categorical)
+summary(data$hobby)
+unique(data$hobby)
+
+# 3. Create a contingency table of 'fav_month' vs 'hobby' to explore the relationship
+fav_month_hobby_table <- table(data$fav_month, data$hobby)
+
+# Print the table to observe the distribution of hobbies by favorite month
+print(fav_month_hobby_table)
+
+# 4. Visualize the relationship using a bar plot
+# We'll create a bar plot with 'hobby' on the x-axis and the count of each favorite month for each hobby
+ggplot(data, aes(x = hobby, fill = fav_month)) +
+  geom_bar(position = "dodge") +
+  labs(title = "count of Each Favorite Month for Each Hobby",
+       x = "hobby",
+       y = "Count",
+       fill = "Favorite Month") +
+  theme_minimal()
+
+# 5. (Optional) Calculate the proportions to see if certain hobbies are more popular for specific favorite months
+prop.table(fav_month_hobby_table, margin = 1)
+
+```
+
+Step 1 & 2: Check the fav_month and hobby variables for any missing or unusual values, and examine their unique values.
+Step 3: Create a contingency table of fav_month vs hobby to explore how people with different favorite months choose different hobbies.
+Step 4: Visualize the results using a barplot() with hobby on the x-axis and the count of each favorite month for each hobby on the y-axis.
+Step 5: Optionally, calculate the proportions of hobbies within each favorite month using prop.table() to observe any trends or patterns.
+
+
+This analysis will help us understand whether people with various preferred months of the year have varied hobby preferences . The contingency table and bar plot will display the distribution of hobbies for each favored month, and the proportions will highlight any noteworthy trends
+

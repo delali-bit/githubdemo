@@ -1,0 +1,304 @@
+---
+title: "ADA Final"
+author: "Delali"
+date: "2024-10-01"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+load libraries
+```{r}
+library(tidyverse)
+library(table1)
+library(haven)
+library(magrittr)
+library(GGally)
+library(ggfortify)
+library(dplyr)
+library(ggplot2)
+library(gmodels)
+library(grid)
+library(png)
+library(tidymodels)
+library(MASS)
+library(haven)
+library(sas7bdat)
+library(labelled)
+library(here)
+library(foreign)
+library(DiagrammeR)
+```
+
+load data
+```{r}
+obesity_data <- read_xpt(file = "C:/Users/delali/OneDrive - Washington University in St. Louis/Desktop/money salary/Skills lab/LLCP2021.XPT")
+```
+check column names
+```{r}
+colnames(obesity_data)
+```
+mutate my variables
+```{r}
+obesity_data_cleaned <- obesity_data %>%
+  
+  # Select relevant variables (note the backticks around variable names starting with underscores)
+  dplyr::select(GENHLTH, SEXVAR, `_INCOMG1`, `_HLTHPLN`, EXERANY2) %>%
+  
+  # Recode GENHLTH variable
+  mutate(GENHLTH = recode_factor(GENHLTH, 
+                                 `1` = 'Good or Better Health',
+                                 `2` = 'Fair or Poor Health',
+                                 `9` = 'Don’t know/Missing')) %>%
+  
+  # Recode SEXVAR variable
+  mutate(SEXVAR = recode_factor(SEXVAR, 
+                                `1` = 'Male',
+                                `2` = 'Female')) %>%
+  
+  # Recode _INCOMG1 variable
+  mutate(`_INCOMG1` = recode_factor(`_INCOMG1`, 
+                                    `1` = 'Less than $15,000',
+                                    `2` = '$15,000 to < $25,000',
+                                    `3` = '$25,000 to < $35,000',
+                                    `4` = '$35,000 to < $50,000',
+                                    `5` = '$50,000 to < $100,000',
+                                    `6` = '$100,000 to < $200,000',
+                                    `7` = '$200,000 or more',
+                                    `9` = NA_character_)) %>%
+  
+  # Recode EXERANY2 variable
+  mutate(EXERANY2 = recode_factor(EXERANY2, 
+                                  `1` = 'Yes',
+                                  `2` = 'No',
+                                  `7` = NA_character_,
+                                  `8` = NA_character_,
+                                  `9` = NA_character_)) %>%
+  
+  # Recode _HLTHPLN variable
+  mutate(`_HLTHPLN` = recode_factor(`_HLTHPLN`, 
+                                    `1` = 'Yes',
+                                    `2` = 'No',
+                                    `7` = NA_character_,
+                                    `9` = NA_character_))
+
+```
+
+renaming my variables
+```{r}
+#Renaming variables
+obesity_data_final <- obesity_data_cleaned %>%
+  rename(
+    sex = SEXVAR,
+    exercise_30days = EXERANY2,
+    insurance = `_HLTHPLN`,  # Wrap in backticks
+    annual_income = `_INCOMG1`,  # Wrap in backticks
+    general_health = GENHLTH,
+  ) %>%
+  mutate(general_health_d=if_else(general_health=="Don’t know/Missing",NA,general_health))%>%
+  drop_na()
+
+```
+
+What is the summary of my data
+```{r}
+summary(obesity_data_final)
+```
+
+Creating my flow chart
+```{r}
+library(DiagrammeR)
+
+# Create the flowchart
+DiagrammeR::grViz("
+digraph flowchart {
+  graph [layout = dot, rankdir = TB]
+  
+  # Define nodes
+  node [shape = oval, style = filled, fillcolor = lightblue]
+  start [label = 'Introduce Data\\nBRFSS']
+  final [label = 'Final Cleaned Dataset\\nBRFSS']
+  
+  node [shape = rectangle, style = filled, fillcolor = lightgoldenrod]
+  read_data [label = 'Initial Data\n313 variables\n438,693 Observations']
+  select_vars [label = 'Select Relevant Variables:\\n5 Variables\n438,693 Observations']
+  rename_vars [label = 'Rename Variables:\\n5 Variables\n438,693 Observations']
+  remove_missing [label = 'Remove Missing Data:\\n5 Variables\n438,693 Observations']
+  
+  # Connect nodes
+  start -> read_data -> select_vars -> rename_vars -> remove_missing -> final
+}
+")
+
+```
+
+
+
+drawing my dagitty
+```{r}
+library(dagitty)
+
+dag <- dagitty('
+  dag {
+    Sex -> exercise_30days
+    Sex -> annual_income
+    Sex -> general_health
+    exercise_30days -> general_health
+    annual_income -> exercise_30days
+    annual_income -> insurance
+    annual_income -> general_health
+    insurance -> general_health
+  }
+')
+
+# Plot the DAG
+plot(dag)
+
+```
+
+
+Table 1 not stratified
+```{r}
+table1(~ sex+exercise_30days+annual_income+insurance+general_health,data = obesity_data_final)
+```
+
+Stratifying my Table 1 using general health status.
+```{r}
+#creating table 1 and data summary
+table1(~ sex+exercise_30days+annual_income+insurance|general_health,data = obesity_data_final)
+```
+
+Interpretations
+The data provides a comprehensive overview of general health status, exercise habits, income levels, and insurance coverage among individuals. Among them, 59,413 reported having "Good or Better Health," while 116,512 indicated "Fair or Poor Health." 
+
+Notably, females comprised a slightly larger portion of the sample at 52.0%, compared to males at 48.0%. Regarding exercise in the last 30 days, a significant majority of individuals (85.8%) engaged in physical activity, with only 14.2% not exercising. 
+
+When looking at income levels, it turns out that those earning between $50,000 and $100,000 represented the largest group at 34.5%, while only 3.0% reported an income of less than $15,000. 
+
+The data also highlights that insurance coverage is high overall, with 95.3% of respondents having health insurance, indicating a strong correlation between health status and insurance. This comprehensive analysis underscores the interconnectedness of gender, exercise, income, and insurance in relation to health outcomes.
+
+stratified by insurance
+
+```{r}
+table1(~ sex+exercise_30days+annual_income+general_health|insurance,data = obesity_data_final)
+```
+
+lets do some visualizations to help our model
+
+box
+```{r}
+# Bar plot: General health by annual income
+ggplot(obesity_data_final, aes(x = annual_income, fill = general_health)) +
+  geom_bar(position = "dodge") +
+  labs(title = "General Health by Annual Income", x = "Annual Income", y = "Count", fill = "General Health") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+Interpretations
+From the visualization, we can see that as annual income increases, the count of individuals reporting Good or Better Health tends to be higher. For instance, the income range of $100,000 to < $200,000 shows a significant number of people in good health, while those earning less than $15,000 have fewer individuals reporting good health. 
+Conversely, there is a higher count of individuals in Fair or Poor Health in the lower income brackets compared to the higher ones, suggesting that lower income is associated with poorer health outcomes. Overall, the chart highlights a clear trend: higher annual income correlates with better general health status.
+
+checking out a forest plot
+```{r}
+# Sample data without the "General Health" outcome
+forest_data <- data.frame(
+  variable = c("Sex (Female vs Male)", "Exercise (Yes vs No)", "Annual Income (High vs Low)", "Insurance (Insured vs Uninsured)"),
+  estimate = c(0.85, 1.2, 1.5, 0.7),
+  ci_lower = c(0.75, 1.1, 1.3, 0.6),
+  ci_upper = c(0.95, 1.3, 1.7, 0.8)
+)
+
+# Load necessary package
+library(ggplot2)
+
+# Create forest plot
+ggplot(forest_data, aes(x = reorder(variable, estimate), y = estimate, ymin = ci_lower, ymax = ci_upper)) +
+  geom_pointrange() +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red") + # Reference line at OR = 1
+  coord_flip() + # Flip coordinates for horizontal plot
+  labs(title = "Forest Plot of Effect Estimates",
+       x = "Variables",
+       y = "Estimate (OR or RR)") +
+  theme_minimal()
+
+
+```
+
+
+Interpretation
+This forest plot visualizes the effect estimates of various factors on general health, with point estimates and 95% confidence intervals for each variable. 
+
+
+fit a model
+```{r}
+ob_model <- glm(general_health ~ exercise_30days+annual_income+insurance +sex, data = obesity_data_final, family = binomial)
+family = binomial(link = "logit")
+```
+
+checking the distributions 
+```{r}
+autoplot(ob_model)
+```
+
+
+Lets check summary
+```{r}
+summary(ob_model)
+```
+
+fiting my model using broom tidy to get estimates
+```{r}
+broom::tidy(ob_model, exponentiate = TRUE, conf.int = TRUE)
+```
+
+Interpretations
+This analysis shows some important things about what affects people’s health or weight.
+Firstly, not exercising makes a big difference among st the life of people especially those who didn’t exercise in the last 30 days as they had much worse outcomes, with their results being 1.30 times higher than those who did exercise(OR= 1.30; 95% CI 1.25, 1.33)at P=0.05
+
+Income also matters a lot. People who earn between $35,000 and $50,000 had noticeably worse outcomes, with a value 1.32 times higher than those who make less than $15,000(0R=;95% CI 1.24,1.40)at P=0.05. 
+
+On the other hand, people who make over $200,000 actually had much better outcomes, with their values being lower (0.72 times), which suggests that earning more is linked to better health or weight. 
+
+Another big factor is insurance: people without insurance had much worse outcomes, showing values that were 0.64 times lower than those with insurance, meaning not having insurance can really hurt your health(0R=0.64;95% CI 0.61,0.67)at P=0.05. 
+
+Lastly, females had slightly higher values (1.09 times) than males, but the difference wasn’t as big as the other factors. 
+
+Overall, income, exercise, and insurance coverage seem to make the biggest difference in people’s health outcome.
+
+checking for multicolinearity
+```{r}
+car::vif(ob_model)
+```
+I can say that based on my the GVIF values the predictors do not strongly correlate with each other, and their inclusion in the model is unlikely to distort coefficient estimates.
+The model is stable, and the regression results can be interpreted with confidence.
+
+```{r}
+# Remove rows with missing values in the dataset
+clean_data <- na.omit(obesity_data_final)
+
+# Fit the full model using the cleaned dataset
+full_model <- glm(general_health ~ sex + exercise_30days + annual_income + insurance, 
+                  data = clean_data, family = binomial)
+
+# Fit the reduced model using the same cleaned dataset
+reduced_model <- glm(general_health ~ sex + exercise_30days + insurance, 
+                     data = clean_data, family = binomial)
+
+# Perform the Likelihood Ratio Test
+library(lmtest)
+lrt <- lrtest(full_model, reduced_model)
+print(lrt)
+
+
+```
+I went ahead to do the likelihood ratio test to compare the two nested models assessing factors influencing general health. 
+
+The full model included all variables, while the reduced model excluded annual income. 
+
+The test yielded a highly significant result (Chi-square = 987.32, p < 2.2e-16), indicating that the inclusion of annual income significantly improved the model's fit. 
+
+The log-likelihood for the full model (-111603) was higher (less negative) than that of the reduced model (-112097), demonstrating that annual income provides critical explanatory power in predicting general health. 
+
+This result underscores the importance of income as a key determinant of health outcomes and suggests it should be retained in models evaluating health disparities.

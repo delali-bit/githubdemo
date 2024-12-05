@@ -156,11 +156,15 @@ dag <- dagitty('
 plot(dag)
 
 ```
-The directed acyclic graph (DAG) illustrates how different factors are connected and influence overall health. 
+my directed acyclic graph (DAG) illustrates how different factors are connected and influence general health. 
 
-Exercise directly affects health and is influenced by a person’s sex and income. Income also impacts health directly and indirectly by affecting exercise and whether a person has insurance, which also plays a direct role in health. 
+To begin with, Exercise notably directly affected health outcome and is influenced by a person’s sex and income. 
 
-Sex affects health indirectly by influencing exercise, income, and insurance. Overall, the diagram highlights how these factors work together to impact a person’s health
+Income also impacted health directly and indirectly by affecting exercise level and whether a person has insurance or not, which also eventually played a direct role on general health status. 
+
+Sex affects health indirectly by influencing exercise, income, and insurance. 
+
+Overall, the DAG highlights how these factors work together to impact a person’s general health
 
 
 Table 1 not stratified
@@ -175,21 +179,26 @@ table1(~ sex+exercise_30days+annual_income+insurance|general_health,data = obesi
 ```
 
 Interpretations
-The data provides a comprehensive overview of general health status, exercise habits, income levels, and insurance coverage among individuals. Among them, 59,413 reported having "Good or Better Health," while 116,512 indicated "Fair or Poor Health." 
+This table  provides a comprehensive overview of general health status, exercise habits, income levels, and insurance coverage among individuals. 
 
-Notably, females comprised a slightly larger portion of the sample at 52.0%, compared to males at 48.0%. Regarding exercise in the last 30 days, a significant majority of individuals (85.8%) engaged in physical activity, with only 14.2% not exercising. 
+Among them, 59,413 reported having "Good or Better Health, while 116,512 indicated "Fair or Poor Health. 
+
+Notably, females comprised a slightly larger portion of the sample at 52.0%, compared to males at 48.0%. 
+
+Regarding exercise in the last 30 days, a significant majority of individuals (85.8%) engaged in physical activity, with only 14.2% not exercising. 
 
 When looking at income levels, it turns out that those earning between $50,000 and $100,000 represented the largest group at 34.5%, while only 3.0% reported an income of less than $15,000. 
 
-The data also highlights that insurance coverage is high overall, with 95.3% of respondents having health insurance, indicating a strong correlation between health status and insurance. This comprehensive analysis underscores the interconnectedness of gender, exercise, income, and insurance in relation to health outcomes.
+The table  also highlights that insurance coverage is high overall, with 95.3% of respondents having health insurance, indicating a strong correlation between health status and insurance. 
+
+This comprehensive analysis underscores the interconnection of gender, exercise, income, and insurance in relation to health outcomes.
 
 stratified by insurance
-
 ```{r}
 table1(~ sex+exercise_30days+annual_income+general_health|insurance,data = obesity_data_final)
 ```
 
-lets do some visualizations to help our model
+lets do some visualizations to help my model
 
 box
 ```{r}
@@ -202,8 +211,13 @@ ggplot(obesity_data_final, aes(x = annual_income, fill = general_health)) +
 
 ```
 Interpretations
-From the visualization, we can see that as annual income increases, the count of individuals reporting Good or Better Health tends to be higher. For instance, the income range of $100,000 to < $200,000 shows a significant number of people in good health, while those earning less than $15,000 have fewer individuals reporting good health. 
-Conversely, there is a higher count of individuals in Fair or Poor Health in the lower income brackets compared to the higher ones, suggesting that lower income is associated with poorer health outcomes. Overall, the chart highlights a clear trend: higher annual income correlates with better general health status.
+From the bar chart , we can see that as annual income increases, the count of individuals reporting Good or Better Health tends to be higher. 
+
+For instance, the income range of $100,000 to < $200,000 shows a significant number of people in good health, while those earning less than $15,000 have fewer individuals reporting good health. 
+
+Conversely, there is a higher count of individuals in Poor Health status in the lower income brackets compared to the higher ones, suggesting that lower income level is associated with poorer health outcomes.
+
+Overall, the bar chart highlights a clear trend resulting in higher annual income correlating with better health.
 
 checking out a forest plot
 ```{r}
@@ -233,7 +247,13 @@ ggplot(forest_data, aes(x = reorder(variable, estimate), y = estimate, ymin = ci
 
 
 Interpretation
-This forest plot visualizes the effect estimates of various factors on general health, with point estimates and 95% confidence intervals for each variable. It highlights key factors influencing health outcomes. Higher income and regular exercise are significantly associated with better health, while the effects of sex and insurance status are minimal and not statistically significant. This emphasizes the importance of socioeconomic and lifestyle factors in determining health.
+This forest plot visualizes the effect estimates of various factors on general health, with point estimates and 95% confidence intervals for each variable. 
+
+It highlights key factors influencing health outcomes. 
+
+it can be seen that Higher income and regular exercise are significantly associated with better health, while the effects of sex and insurance status are minimal and not statistically significant. 
+
+This emphasizes the importance of socioeconomic and lifestyle factors in determining health.
 
 
 fit a model
@@ -260,24 +280,24 @@ broom::tidy(ob_model, exponentiate = TRUE, conf.int = TRUE)
 
 Interpretations
 This analysis shows some important things about what affects people’s health or weight.
-Firstly, not exercising makes a big difference among st the life of people especially those who didn’t exercise in the last 30 days as they had much worse outcomes, with their results being 1.30 times higher than those who did exercise(OR= 1.30; 95% CI 1.25, 1.33)at P=0.05
+Firstly, not exercising makes a big difference among st the life of people especially those who didn’t exercise in the last 30 days as they had much worse outcomes, with their results being 1.30 times higher than those who did exercise(OR= 1.30; 95% CI 1.25, 1.33)at P=0.05.
 
-Income also matters a lot. People who earn between $35,000 and $50,000 had noticeably worse outcomes, with a value 1.32 times higher than those who make less than $15,000(0R=;95% CI 1.24,1.40)at P=0.05. 
+Income also matters a lot. People who earn between $35,000 and $50,000 had noticeably worse outcomes, with a value 1.32 times higher than those who make less than $15,000(0R=1.32 ;95% CI 1.24,1.40)at P=0.05. 
 
-On the other hand, people who make over $200,000 actually had much better outcomes, with their values being lower (0.72 times), which suggests that earning more is linked to better health or weight. 
+On the other hand, people who make over $200,000 actually had much better outcomes, with their values being lower (0.72 times), which suggests that earning more is linked to better health or weight(0R=0.67;95% CI 0.68,0.77)at P=0.05. 
 
 Another big factor is insurance: people without insurance had much worse outcomes, showing values that were 0.64 times lower than those with insurance, meaning not having insurance can really hurt your health(0R=0.64;95% CI 0.61,0.67)at P=0.05. 
 
-Lastly, females had slightly higher values (1.09 times) than males, but the difference wasn’t as big as the other factors. 
+Lastly, females had slightly higher values (1.09 times) than males, but the difference wasn’t as big as the other factors(0R=1.09;95% CI 1.06,1.11)at P=0.05. 
 
 Overall, income, exercise, and insurance coverage seem to make the biggest difference in people’s health outcome.
 
-checking for multicolinearity
+checking for colinearity
 ```{r}
 car::vif(ob_model)
 ```
 I can say that based on my the GVIF values the predictors do not strongly correlate with each other, and their inclusion in the model is unlikely to distort coefficient estimates.
-The model is stable, and the regression results can be interpreted with confidence.
+The model is stable, and the regression results may be interpreted with confidence.
 
 ```{r}
 # Remove rows with missing values in the dataset
@@ -304,6 +324,6 @@ The full model included all variables, while the reduced model excluded annual i
 
 The test yielded a highly significant result (Chi-square = 987.32, p < 2.2e-16), indicating that the inclusion of annual income significantly improved the model's fit. 
 
-The log-likelihood for the full model (-111603) was higher (less negative) than that of the reduced model (-112097), demonstrating that annual income provides critical explanatory power in predicting general health. 
+More so, the log-likelihood for the full model (-111603) was higher (less negative) than that of the reduced model (-112097), demonstrating that annual income provides critical explanatory power in predicting general health. 
 
 This result underscores the importance of income as a key determinant of health outcomes and suggests it should be retained in models evaluating health disparities.

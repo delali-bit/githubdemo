@@ -228,7 +228,7 @@ ggplot(forest_data, aes(x = reorder(variable, estimate), y = estimate, ymin = ci
 
 
 Interpretation
-This forest plot visualizes the effect estimates of various factors on general health, with point estimates and 95% confidence intervals for each variable. 
+This forest plot visualizes the effect estimates of various factors on general health, with point estimates and 95% confidence intervals for each variable. It highlights key factors influencing health outcomes. Higher income and regular exercise are significantly associated with better health, while the effects of sex and insurance status are minimal and not statistically significant. This emphasizes the importance of socioeconomic and lifestyle factors in determining health.
 
 
 fit a model

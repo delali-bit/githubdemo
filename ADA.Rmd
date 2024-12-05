@@ -156,6 +156,11 @@ dag <- dagitty('
 plot(dag)
 
 ```
+The directed acyclic graph (DAG) illustrates how different factors are connected and influence overall health. 
+
+Exercise directly affects health and is influenced by a person’s sex and income. Income also impacts health directly and indirectly by affecting exercise and whether a person has insurance, which also plays a direct role in health. 
+
+Sex affects health indirectly by influencing exercise, income, and insurance. Overall, the diagram highlights how these factors work together to impact a person’s health
 
 
 Table 1 not stratified
